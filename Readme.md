@@ -1,7 +1,3 @@
-Here’s a clean, non-technical README for your Anchor/Solana program. It focuses on concepts, user roles, and simple flows so anyone can understand how it works.
-
----
-
 ### _Cluster X_ — Community Access and Membership on Solana
 
 _`Cluster X`_ is a simple, on-chain system for managing access to “instances” (think rooms, clubs, projects, or events) with clear roles and time-based passes. It lets a manager run the system, invite trusted admins, and empower paid “captains” to create time-limited portfolio spaces that members can join.
