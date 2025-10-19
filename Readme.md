@@ -19,7 +19,7 @@ Cluster X implements a role and quota system to gate instance creation and claim
 
 ### Program ID
 
-    - GaR9gLTt5sgZozzyn8oqgLWhGWwGhN6pTMiy5haJbgq9
+    - D2s8xbXyKVEePW2KH8Kcn1wySnK2rzAd6eVb42WoYXHC
 
 ## PDA Setup Notes
 

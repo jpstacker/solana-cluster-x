@@ -5,7 +5,7 @@ use anchor_lang::solana_program::system_instruction;
 use anchor_lang::system_program;
 use anchor_lang::system_program::Transfer;
 
-declare_id!("GaR9gLTt5sgZozzyn8oqgLWhGWwGhN6pTMiy5haJbgq9");
+declare_id!("D2s8xbXyKVEePW2KH8Kcn1wySnK2rzAd6eVb42WoYXHC");
 
 // Anchor programs always use 8 bits for the discriminator
 pub const ANCHOR_DISCRIMINATOR: usize = 8;
@@ -19,24 +19,20 @@ pub mod cluster_x {
         ctx: Context<InitConfig>,
         name: String,
         title: String,
-        instance_price: u64,
         instance_limit: u16,
-        addon_price: u64,
         addon_limit: u16,
     ) -> Result<()> {
-        require!(name.len() <= 20, ErrorCode::LengthExceeded); 
-        require!(title.len() <= 20, ErrorCode::LengthExceeded); 
-        
+        require!(name.len() <= 20, ErrorCode::LimitExceeded); 
+        require!(title.len() <= 20, ErrorCode::LimitExceeded); 
+
         let cfg = &mut ctx.accounts.config;
+        cfg.owner = ctx.accounts.manager.key();
         cfg.name = name;
         cfg.title = title;
         cfg.instance_ids = 0;
-        cfg.instance_price = instance_price;
         cfg.instance_limit = instance_limit;
-        cfg.addon_price = addon_price;
         cfg.addon_limit = addon_limit;
 
-        cfg.treasury = ctx.accounts.treasury.key();
         cfg.bump = ctx.bumps.config;
         ctx.accounts.requests.bump = ctx.bumps.requests;
 
@@ -51,22 +47,18 @@ pub mod cluster_x {
 
     pub fn set_addon(
         ctx: Context<SetConfig>, 
-        addon_price: u64,
         addon_limit: u16
     ) -> Result<()> {
         only_manager(&ctx.accounts.config, &ctx.accounts.manager)?;
-        ctx.accounts.config.addon_price = addon_price;
         ctx.accounts.config.addon_limit = addon_limit;
         Ok(())
     }
 
     pub fn set_instance(
         ctx: Context<SetConfig>, 
-        instance_price: u64,
         instance_limit: u16
     ) -> Result<()> {
         only_manager(&ctx.accounts.config, &ctx.accounts.manager)?;
-        ctx.accounts.config.instance_price = instance_price;
         ctx.accounts.config.instance_limit = instance_limit;
         Ok(())
     }
@@ -75,13 +67,13 @@ pub mod cluster_x {
         ctx: Context<RequestAdmin>, 
         uri: String
     ) -> Result<()> {
-        require!(uri.len() < 128, ErrorCode::LengthExceeded);
+        require!(uri.len() < 128, ErrorCode::LimitExceeded);
         let req = &mut ctx.accounts.requests;
 
         if req.requests.iter().any(|r|r.wallet == ctx.accounts.requester.key()) {
             return err!(ErrorCode::AlreadyRequested);
         }
-        require!(req.requests.len() < 100, ErrorCode::RequestListFull);
+        require!(req.requests.len() < 100, ErrorCode::ListIsFull);
 
         req.requests.push(Portfolio {wallet: ctx.accounts.requester.key(), uri});
         Ok(())
@@ -124,40 +116,19 @@ pub mod cluster_x {
         Ok(())
     }
 
-    pub fn buy_captainship(ctx: Context<BuyCaptainship>) -> Result<()> {
-        transfer_lamports(
-            &ctx.accounts.payer, 
-            &ctx.accounts.treasury, 
-            &ctx.accounts.system_program, 
-            &ctx.accounts.config.instance_price
-        );
-
+    pub fn claim_captainship(ctx: Context<BuyCaptainship>) -> Result<()> {
         let cap = &mut ctx.accounts.captain;
         cap.owner = ctx.accounts.payer.key();
         cap.instance_list = Vec::new();
-        cap.remaining_instance_count = ctx.accounts.config.instance_limit;
+        cap.remaining_limit = ctx.accounts.config.instance_limit;
         cap.addon_count = 0;
         cap.bump = ctx.bumps.captain;
         Ok(())
     }
     
-    pub fn buy_addon(ctx: Context<BuyAddOn>) -> Result<()> {
-        let price  = &ctx.accounts.config.addon_price;
-        transfer_lamports(
-            &ctx.accounts.payer,
-            &ctx.accounts.treasury,
-            &ctx.accounts.system_program,
-            price
-        )?;
-
-        let add_on = &mut ctx.accounts.add_on;
-        add_on.captain = ctx.accounts.captain.key();
-        add_on.limit = ctx.accounts.config.addon_limit;
-        add_on.price = *price;
-        add_on.bump = ctx.bumps.add_on;
-
+    pub fn claim_addon(ctx: Context<BuyAddOn>) -> Result<()> {
         let cap = &mut ctx.accounts.captain;
-        cap.remaining_instance_count = cap.remaining_instance_count.saturating_add(add_on.limit);
+        cap.remaining_limit = cap.remaining_limit.saturating_add(ctx.accounts.config.addon_limit);
         cap.addon_count = cap.addon_count.saturating_add(1);
         Ok(())
     }
@@ -166,40 +137,35 @@ pub mod cluster_x {
         ctx: Context<CreateInstance>,
         instance_type: InstanceType,
         name: String,
-        price: u64,
+        days: i64,
         consumers: Vec<Pubkey>,
         whitelist: Vec<Pubkey>,
     ) -> Result<()> {
         require!(whitelist.len() <= 200, ErrorCode::LimitExceeded);
 
-        // Enforce creation rules
-        match instance_type {
-            InstanceType::Public => { /* anyone can create */ }
-            InstanceType::Private | InstanceType::Whitelisted => {
-                only_manager(&ctx.accounts.config, &ctx.accounts.creator)?;
+        if let InstanceType::Private | InstanceType::Whitelisted = instance_type {
+            only_manager(&ctx.accounts.config, &ctx.accounts.creator)?;            
+        }
+
+        if instance_type == InstanceType::Portfolio {
+            let mut ok = false;
+
+            if let Some(_admin) = ctx.accounts.admin.as_ref() {
+                if _admin.active && _admin.owner == ctx.accounts.creator.key() {ok = true;}
             }
-            InstanceType::Paid => {
-                let mut ok = false;
-
-                if let Some(_admin) = ctx.accounts.admin.as_ref() {
-                    if _admin.active && _admin.owner == ctx.accounts.creator.key() {ok = true;}
-                }
-                if !ok {
-                    if let Some(_cap) = ctx.accounts.captain.as_ref() {
-                        if _cap.owner == ctx.accounts.creator.key() && _cap.remaining_instance_count > 0 {
-                            ok = true;
-                        }
+            if !ok {
+                if let Some(_cap) = ctx.accounts.captain.as_ref() {
+                    if _cap.owner == ctx.accounts.creator.key() && _cap.remaining_limit > 0 {
+                        ok = true;
                     }
                 }
-                require!(ok, ErrorCode::NotAuthorized);
+            }
+            require!(ok, ErrorCode::NotAuthorized);
 
-                if let Some(_cap) = ctx.accounts.captain.as_deref_mut() {
-                    if _cap.owner == ctx.accounts.creator.key() {
-                        _cap.remaining_instance_count -= 1;
-                    }
+            if let Some(_cap) = ctx.accounts.captain.as_deref_mut() {
+                if _cap.owner == ctx.accounts.creator.key() {
+                    _cap.remaining_limit -= 1;
                 }
-
-
             }
         }
 
@@ -209,24 +175,29 @@ pub mod cluster_x {
         let inst = &mut ctx.accounts.instance;
         inst.instance_type = instance_type;
         inst.name = name.to_string();
-        inst.price = price;
         inst.owner = ctx.accounts.creator.key();
         inst.instance_id = ctx.accounts.config.instance_ids;
-        inst.instance_treasury = ctx.accounts.instance_treasury.key();
         inst.consumers = consumers;
         inst.whitelist = whitelist;
         inst.bump = ctx.bumps.instance;
 
+        if inst.instance_type == InstanceType::Portfolio {
+            let now = Clock::get()?.unix_timestamp;
+            let day = 24_i64 * 60 * 60;
+            let ttl = days.checked_mul(day).ok_or(ErrorCode::Overflow)?;
+            inst.expires_at = now.checked_add(ttl).ok_or(ErrorCode::Overflow)?;
+        }
+
         // Track in creator lists
         if let Some(_admin) = ctx.accounts.admin.as_deref_mut() {
             if _admin.owner == ctx.accounts.creator.key() {
-                require!(_admin.instance_list.len() < 200, ErrorCode::InstanceListFull);
+                require!(_admin.instance_list.len() < 200, ErrorCode::ListIsFull);
                 _admin.instance_list.push(inst.key());
             }
         }
         if let Some(_cap) = ctx.accounts.captain.as_deref_mut() {
             if _cap.owner == ctx.accounts.creator.key() {
-                require!(_cap.instance_list.len() < 200, ErrorCode::InstanceListFull);
+                require!(_cap.instance_list.len() < 200, ErrorCode::ListIsFull);
                 _cap.instance_list.push(inst.key());
             }
         }
@@ -234,41 +205,34 @@ pub mod cluster_x {
         Ok(())
     }
 
-    pub fn set_private_instance(ctx: Context<SetInstance>, wallet: Pubkey) -> Result<()> {
+    pub fn grant_private_instance(ctx: Context<SetInstance>, wallet: Pubkey) -> Result<()> {
         only_manager(&ctx.accounts.config, &ctx.accounts.manager)?;
-        require!(ctx.accounts.instance.consumers.len() < 200, ErrorCode::LengthExceeded);
+        require!(ctx.accounts.instance.consumers.len() < 200, ErrorCode::LimitExceeded);
         ctx.accounts.instance.consumers.push(wallet);
         Ok(())
     }
 
-    pub fn set_whitelist(ctx: Context<SetInstance>, wallet: Pubkey) -> Result<()> {
+    pub fn add_whitelist(ctx: Context<SetInstance>, wallet: Pubkey) -> Result<()> {
         only_manager(&ctx.accounts.config, &ctx.accounts.manager)?;
-        require!(ctx.accounts.instance.whitelist.len() < 200, ErrorCode::LengthExceeded);
+        require!(ctx.accounts.instance.whitelist.len() < 200, ErrorCode::LimitExceeded);
         ctx.accounts.instance.whitelist.push(wallet);
         Ok(())
     }
 
     pub fn claim_instance(ctx: Context<ClaimInstance>) -> Result<()> {
-
         let inst = &mut ctx.accounts.instance;
         let claimer_key = ctx.accounts.claimer.key();
-        require!(inst.consumers.len() < 200, ErrorCode::LengthExceeded);
+        require!(inst.consumers.len() < 200, ErrorCode::LimitExceeded);
 
         match inst.instance_type {
             InstanceType::Public => {}
-            InstanceType::Private => {
-                return err!(ErrorCode::NotManager);
-            }
+            InstanceType::Private => {return err!(ErrorCode::NotManager);}
             InstanceType::Whitelisted => {
                 require!(inst.whitelist.iter().any(|w| *w == claimer_key), ErrorCode::NotAuthorized);
             }
-            InstanceType::Paid => {
-                transfer_lamports(
-                    &ctx.accounts.claimer,
-                    &ctx.accounts.instance_treasury,
-                    &ctx.accounts.system_program,
-                    &inst.price,
-                )?;
+            InstanceType::Portfolio => {
+                let now = Clock::get()?.unix_timestamp;
+                require!(now <= inst.expires_at, ErrorCode::Expired);
             }
         }
         if inst.consumers.iter().all(|claimer| *claimer != claimer_key) {
@@ -277,56 +241,7 @@ pub mod cluster_x {
 
         Ok(())
     }
-
-    pub fn withdraw_global_treasury(
-        ctx: Context<WithdrawFromTreasury>, 
-        lamports: u64
-    ) -> Result<()> {
-        only_manager(&ctx.accounts.config, &ctx.accounts.manager)?;
-        require!(ctx.accounts.treasury.lamports() >= lamports, ErrorCode::InsufficientFunds);
-
-        let ix = system_instruction::transfer(
-            &ctx.accounts.treasury.key(),
-            &ctx.accounts.manager.key(),
-            lamports,
-        );
-        let account_infos = [
-                ctx.accounts.treasury.to_account_info(),
-                ctx.accounts.manager.to_account_info(),
-                ctx.accounts.system_program.to_account_info()
-        ];
-        let signer_seeds: &[&[u8]] = &[b"global_treasury", &[ctx.bumps.treasury]];
-
-        invoke_signed(&ix, &account_infos, &[signer_seeds]);
-        Ok(())
-    }
-
-    pub fn withdraw_Instance_treasury(
-        ctx: Context<WithdrawFromInstanceTreasury>, 
-        lamports: u64
-    ) -> Result<()> {
-        let inst = &mut ctx.accounts.instance;
-        require!(ctx.accounts.treasury.lamports() >= lamports, ErrorCode::InsufficientFunds);
-
-        let ix = system_instruction::transfer(
-            &ctx.accounts.treasury.key(),
-            &ctx.accounts.claimer.key(),
-            lamports,
-        );
-        let account_infos = [
-                ctx.accounts.treasury.to_account_info(),
-                ctx.accounts.claimer.to_account_info(),
-                ctx.accounts.system_program.to_account_info()
-        ];
-        let signer_seeds: &[&[u8]] = &[b"global_treasury", &[ctx.bumps.treasury]];
-
-        invoke_signed(&ix, &account_infos, &[signer_seeds]);
-        Ok(())
-    }
-
 }
-
-
 
 /* --------------------------------------------------------------------- */
 /* ----------------------- Accounts & Validation ----------------------- */
@@ -354,53 +269,14 @@ pub struct InitConfig<'info> {
     )]
     pub requests: Account<'info, AdminRequest>,
 
-    #[account(mut, seeds = [b"global_treasury"], bump)]
-    /// CHECK: Will be created via CPI as a system-owned account with 0 space
-    pub treasury: SystemAccount<'info>,
-
     pub system_program: Program<'info, System>,
 }
-
 
 #[derive(Accounts)]
 pub struct SetConfig<'info> {
     pub manager: Signer<'info>,
     #[account(mut, seeds = [b"config"], bump = config.bump)]
     pub config: Account<'info, Config>,
-}
-
-#[derive(Accounts)]
-pub struct GlobalTreasuryConfig<'info> {
-    pub manager: Signer<'info>,
-    #[account(mut, seeds = [b"config"], bump = config.bump)]
-    pub config: Account<'info, Config>,
-    #[account(mut, seeds = [b"global_treasury"], bump)]
-    pub treasury: SystemAccount<'info>,
-}
-
-#[derive(Accounts)]
-pub struct WithdrawFromTreasury<'info> {
-    #[account(mut)]
-    pub manager: Signer<'info>,
-    #[account(mut, seeds = [b"config"], bump = config.bump)]
-    pub config: Account<'info, Config>,
-    
-    #[account(mut, seeds = [b"global_treasury"], bump)]
-    pub treasury: SystemAccount<'info>,
-    pub system_program: Program<'info, System>
-}
-
-#[derive(Accounts)]
-pub struct WithdrawFromInstanceTreasury<'info> {
-    #[account(mut)]
-    pub claimer: Signer<'info>,
-
-    #[account(mut, seeds = [b"instance", &instance.name.as_bytes()], bump = instance.bump)]
-    pub instance: Account<'info, Instance>,
-
-    #[account(mut, seeds = [b"instance_treasury"], bump)]
-    pub treasury: SystemAccount<'info>,
-    pub system_program: Program<'info, System>
 }
 
 #[derive(Accounts)]
@@ -450,7 +326,6 @@ pub struct RejectAdmin<'info> {
     pub requests: Account<'info, AdminRequest>,
 }
 
-
 #[derive(Accounts)]
 pub struct SetAdminStatus<'info> {
     pub manager: Signer<'info>,
@@ -466,8 +341,6 @@ pub struct BuyCaptainship<'info> {
     pub payer: Signer<'info>,
     #[account(seeds = [b"config"], bump = config.bump)]
     pub config: Account<'info, Config>,
-    #[account(mut, seeds = [b"global_treasury"], bump)]
-    pub treasury: SystemAccount<'info>,
     
     #[account(
         init,
@@ -486,8 +359,6 @@ pub struct BuyAddOn<'info> {
     pub payer: Signer<'info>,
     #[account(seeds = [b"config"], bump = config.bump)]
     pub config: Account<'info, Config>,
-    #[account(mut, seeds = [b"global_treasury"], bump)]
-    pub treasury: SystemAccount<'info>,
     #[account(mut, seeds = [b"captain", payer.key().as_ref()], bump = captain.bump)]
     pub captain: Account<'info, CaptainAccount>,
     #[account(
@@ -523,10 +394,6 @@ pub struct CreateInstance<'info> {
     )]
     pub instance: Account<'info, Instance>,
 
-    #[account(mut, seeds = [b"instance_treasury"], bump)]
-    /// CHECK: Will be created via CPI as a system-owned account with 0 space
-    pub instance_treasury: SystemAccount<'info>,
-
     pub system_program: Program<'info, System>,
 }
 
@@ -536,11 +403,10 @@ pub struct ClaimInstance<'info> {
     pub claimer: Signer<'info>,
     #[account(mut, seeds = [b"instance", &instance.name.as_bytes()], bump = instance.bump)]
     pub instance: Account<'info, Instance>,
-    #[account(mut, seeds = [b"instance_treasury"], bump)]
-    pub instance_treasury: SystemAccount<'info>,
     pub system_program: Program<'info, System>,
 }
 #[derive(Accounts)]
+
 pub struct SetInstance<'info> {
     pub manager: Signer<'info>,
     #[account(seeds = [b"config"], bump = config.bump)]
@@ -563,14 +429,10 @@ pub struct Config {
     #[max_len(64)]
     pub title: String,
     pub instance_ids: u64,
-    pub instance_price: u64, // in lamports
-    pub addon_price: u64, // in lamports
     pub instance_limit: u16,
     pub addon_limit: u16,
-    pub treasury: Pubkey,
     pub bump: u8,
 }
-
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
 pub struct Portfolio{
@@ -598,14 +460,13 @@ pub struct AdminAccount {
     pub bump: u8,
 }
 
-
 #[account]
 #[derive(InitSpace)]
 pub struct CaptainAccount {
     pub owner: Pubkey,
     #[max_len(200)]
     pub instance_list: Vec<Pubkey>,
-    pub remaining_instance_count: u16,
+    pub remaining_limit: u16,
     pub addon_count: u16,
     pub bump: u8,
 }
@@ -615,7 +476,6 @@ pub struct CaptainAccount {
 pub struct AddOn {
     pub captain: Pubkey,
     pub limit: u16,
-    pub price: u64,
     pub bump: u8,
 }
 
@@ -623,7 +483,7 @@ pub struct AddOn {
 pub enum InstanceType {
     Private,
     Whitelisted,
-    Paid,
+    Portfolio,
     Public,
 }
 
@@ -634,42 +494,28 @@ pub struct Instance {
     #[max_len(30)]
     pub name: String,
     pub instance_id: u64,
-    pub price: u64,
+    pub expires_at: i64,        // unix timestamp (seconds)
     pub instance_type: InstanceType,
     #[max_len(200)]
     pub consumers: Vec<Pubkey>,
     #[max_len(200)]
     pub whitelist: Vec<Pubkey>,
-    pub instance_treasury: Pubkey,
     pub bump: u8,
 }
 
+/* -------------------------------------------------------------------- */
 /* ----------------------------- Utilities ---------------------------- */
+/* -------------------------------------------------------------------- */
 fn only_manager(cfg: &Account<Config>, signer: &Signer) -> Result<()> {
     require!(cfg.owner == signer.key(), ErrorCode::NotManager);
     Ok(())
 }
 
-fn transfer_lamports<'info>(
-    from: &Signer<'info>,
-    to: &SystemAccount<'info>,
-    system_program: &Program<'info, System>,
-    amount: &u64
-) -> Result<()> {
-    let ix = system_instruction::transfer(&from.key(), &to.key(), *amount);
-    invoke(&ix, &[
-        from.to_account_info(),
-        to.to_account_info(),
-        system_program.to_account_info(),
-    ])?;
-    Ok(())
-}
-
+/* -------------------------------------------------------------------- */
 /* ------------------------------ Errors ------------------------------ */
+/* -------------------------------------------------------------------- */
 #[error_code]
 pub enum ErrorCode {
-    #[msg("Length Exceeded")]
-    LengthExceeded,
     #[msg("Limit Exceeded")]
     LimitExceeded,
     #[msg("Only Manager")]
@@ -678,12 +524,14 @@ pub enum ErrorCode {
     NotAuthorized,
     #[msg("Already requested")]
     AlreadyRequested,
-    #[msg("Request list full")]
-    RequestListFull,
+    #[msg("List Is Full")]
+    ListIsFull,
     #[msg("Request not found")]
     RequestNotFound,
-    #[msg("Instance list full")]
-    InstanceListFull,
     #[msg("Insufficient Funds")]
-    InsufficientFunds
+    InsufficientFunds,
+    #[msg("Overflow")]
+    Overflow,
+    #[msg("Expired")]
+    Expired
 }
