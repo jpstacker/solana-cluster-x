@@ -1,0 +1,27 @@
+anchor build
+
+solana-test-validator --reset
+anchor keys sync
+anchor deploy --provider.cluster localnet
+
+
+=================================
+anchor deploy --provider.cluster localnet
+Deploying cluster: http://127.0.0.1:8899
+Upgrade authority: /home/laks/.config/solana/id.json
+Deploying program "open_club"...
+Program path: /mnt/d/web3/sln/own/role-based-instance/anchor/target/deploy/open_club.so...
+Program Id: H8RjKyUCMdkSbUmQFCtpcAAfT4E2tjL7LfswjTm38Vz3
+
+Signature: wsfNKfr99Ge4joKtHTnDL4NXKN4xvKGJ2bdBsvqTbe79SzAGnpSnGHj4gNimHAtY1puiQY187kKMjC8q7D1khHF
+
+Deploy success
+=================================
+Found incorrect program id declaration in "/mnt/d/web3/sln/own/role-based-instance/anchor/programs/open_club/src/lib.rs"
+Updated to H8RjKyUCMdkSbUmQFCtpcAAfT4E2tjL7LfswjTm38Vz3
+
+Found incorrect program id declaration in Anchor.toml for the program `open_club`
+Updated to H8RjKyUCMdkSbUmQFCtpcAAfT4E2tjL7LfswjTm38Vz3
+
+All program id declarations are synced.
+Please rebuild the program to update the generated artifacts.

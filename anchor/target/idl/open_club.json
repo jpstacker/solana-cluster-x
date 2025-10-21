@@ -1,0 +1,1222 @@
+{
+  "address": "H8RjKyUCMdkSbUmQFCtpcAAfT4E2tjL7LfswjTm38Vz3",
+  "metadata": {
+    "name": "open_club",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "add_whitelist",
+      "discriminator": [
+        215,
+        46,
+        143,
+        176,
+        108,
+        113,
+        24,
+        1
+      ],
+      "accounts": [
+        {
+          "name": "manager",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "instance",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  115,
+                  116,
+                  97,
+                  110,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instance.name",
+                "account": "Instance"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "wallet",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "approve_admin",
+      "discriminator": [
+        223,
+        109,
+        37,
+        168,
+        85,
+        117,
+        185,
+        40
+      ],
+      "accounts": [
+        {
+          "name": "manager",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "info",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  102,
+                  111
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "wallet"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "wallet",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "claim_addon",
+      "discriminator": [
+        39,
+        44,
+        42,
+        187,
+        106,
+        60,
+        126,
+        39
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "info",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  102,
+                  111
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "captain",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  97,
+                  112,
+                  116,
+                  97,
+                  105,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "payer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claim_captainship",
+      "discriminator": [
+        105,
+        225,
+        255,
+        95,
+        74,
+        229,
+        67,
+        207
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "info",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  102,
+                  111
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "captain",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  97,
+                  112,
+                  116,
+                  97,
+                  105,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "payer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claim_instance",
+      "discriminator": [
+        148,
+        243,
+        188,
+        222,
+        206,
+        143,
+        22,
+        245
+      ],
+      "accounts": [
+        {
+          "name": "claimer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "instance",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  115,
+                  116,
+                  97,
+                  110,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instance.name",
+                "account": "Instance"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_instance",
+      "discriminator": [
+        144,
+        215,
+        115,
+        236,
+        153,
+        53,
+        87,
+        28
+      ],
+      "accounts": [
+        {
+          "name": "creator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "info",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  102,
+                  111
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "optional": true
+        },
+        {
+          "name": "captain",
+          "optional": true
+        },
+        {
+          "name": "instance",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  115,
+                  116,
+                  97,
+                  110,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "name"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "instance_type",
+          "type": {
+            "defined": {
+              "name": "InstanceType"
+            }
+          }
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "days",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "grant_private_instance",
+      "discriminator": [
+        125,
+        124,
+        184,
+        175,
+        168,
+        0,
+        131,
+        255
+      ],
+      "accounts": [
+        {
+          "name": "manager",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "instance",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  115,
+                  116,
+                  97,
+                  110,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instance.name",
+                "account": "Instance"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "wallet",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "init_config",
+      "discriminator": [
+        23,
+        235,
+        115,
+        232,
+        168,
+        96,
+        1,
+        231
+      ],
+      "accounts": [
+        {
+          "name": "manager",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "info",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  102,
+                  111
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "name": "instance_limit",
+          "type": "u16"
+        },
+        {
+          "name": "addon_limit",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "reject_admin",
+      "discriminator": [
+        253,
+        12,
+        169,
+        115,
+        88,
+        117,
+        177,
+        252
+      ],
+      "accounts": [
+        {
+          "name": "manager",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "info",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  102,
+                  111
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "wallet",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "request_admin",
+      "discriminator": [
+        188,
+        210,
+        222,
+        116,
+        244,
+        23,
+        93,
+        70
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "info",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  102,
+                  111
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "set_addon_limit",
+      "discriminator": [
+        231,
+        85,
+        106,
+        145,
+        227,
+        76,
+        135,
+        83
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "info",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  102,
+                  111
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "addon_limit",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "set_admin_status",
+      "discriminator": [
+        128,
+        223,
+        157,
+        71,
+        34,
+        77,
+        219,
+        157
+      ],
+      "accounts": [
+        {
+          "name": "manager",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "admin.wallet",
+                "account": "Admin"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "status",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "set_instance_limit",
+      "discriminator": [
+        214,
+        165,
+        226,
+        187,
+        158,
+        8,
+        218,
+        47
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "info",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  102,
+                  111
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "instance_limit",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "set_manager",
+      "discriminator": [
+        30,
+        197,
+        171,
+        92,
+        121,
+        184,
+        151,
+        165
+      ],
+      "accounts": [
+        {
+          "name": "manager",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "new_manager",
+          "type": "pubkey"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Admin",
+      "discriminator": [
+        244,
+        158,
+        220,
+        65,
+        8,
+        73,
+        4,
+        65
+      ]
+    },
+    {
+      "name": "Captain",
+      "discriminator": [
+        125,
+        56,
+        140,
+        26,
+        152,
+        248,
+        52,
+        189
+      ]
+    },
+    {
+      "name": "Config",
+      "discriminator": [
+        155,
+        12,
+        170,
+        224,
+        30,
+        250,
+        204,
+        130
+      ]
+    },
+    {
+      "name": "Info",
+      "discriminator": [
+        147,
+        65,
+        188,
+        74,
+        227,
+        5,
+        241,
+        181
+      ]
+    },
+    {
+      "name": "Instance",
+      "discriminator": [
+        202,
+        22,
+        81,
+        185,
+        174,
+        92,
+        85,
+        47
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "AlreadyInitialized",
+      "msg": "Config Already Initialized"
+    },
+    {
+      "code": 6001,
+      "name": "LimitExceeded",
+      "msg": "Limit Exceeded"
+    },
+    {
+      "code": 6002,
+      "name": "NotManager",
+      "msg": "Only Manager"
+    },
+    {
+      "code": 6003,
+      "name": "NotAuthorized",
+      "msg": "Not authorized"
+    },
+    {
+      "code": 6004,
+      "name": "AlreadyRequested",
+      "msg": "Already requested"
+    },
+    {
+      "code": 6005,
+      "name": "ListIsFull",
+      "msg": "List Is Full"
+    },
+    {
+      "code": 6006,
+      "name": "RequestNotFound",
+      "msg": "Request not found"
+    },
+    {
+      "code": 6007,
+      "name": "InsufficientFunds",
+      "msg": "Insufficient Funds"
+    },
+    {
+      "code": 6008,
+      "name": "Overflow",
+      "msg": "Overflow"
+    },
+    {
+      "code": 6009,
+      "name": "Expired",
+      "msg": "Expired"
+    },
+    {
+      "code": 6010,
+      "name": "ExistingValue",
+      "msg": "Existing Value"
+    }
+  ],
+  "types": [
+    {
+      "name": "Admin",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "active",
+            "type": "bool"
+          },
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "instance_list",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Captain",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "instance_list",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "remaining_limit",
+            "type": "u16"
+          },
+          {
+            "name": "addon_count",
+            "type": "u16"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Config",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "initialized",
+            "type": "bool"
+          },
+          {
+            "name": "manager",
+            "type": "pubkey"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Info",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "instance_ids",
+            "type": "u64"
+          },
+          {
+            "name": "instance_limit",
+            "type": "u16"
+          },
+          {
+            "name": "addon_limit",
+            "type": "u16"
+          },
+          {
+            "name": "admin_requests",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Instance",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "instance_id",
+            "type": "u64"
+          },
+          {
+            "name": "expires_at",
+            "type": "i64"
+          },
+          {
+            "name": "instance_type",
+            "type": {
+              "defined": {
+                "name": "InstanceType"
+              }
+            }
+          },
+          {
+            "name": "consumers",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "whitelist",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InstanceType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Private"
+          },
+          {
+            "name": "Whitelisted"
+          },
+          {
+            "name": "Portfolio"
+          },
+          {
+            "name": "Public"
+          }
+        ]
+      }
+    }
+  ]
+}
